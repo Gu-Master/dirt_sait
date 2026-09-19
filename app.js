@@ -25,6 +25,8 @@ const els = {
   fullscreenBtn: $("#fullscreenBtn"),
   downloadBtn: $("#downloadBtn"),
   deleteBtn: $("#deleteBtn"),
+  zoomSlider: $("#zoomSlider"),
+  zoomGear: $("#zoomGear"),
   prevBtn: $("#prevBtn"),
   nextBtn: $("#nextBtn"),
   fileInput: $("#fileInput"),
@@ -47,10 +49,13 @@ let objectUrls = new Map();
 let activeId = null;
 let view = "portal";
 let saveTitleTimer = 0;
-let portalZoom = 1;
+let portalBaseZoom = 1.12;
+let portalZoom = portalBaseZoom;
 let portalZoomTimer = 0;
 let pinchStartDistance = 0;
 let pinchStartZoom = 1;
+let gearDragStartX = 0;
+let gearDragStartZoom = portalBaseZoom;
 let meta = loadJson(META_KEY, {});
 let favorites = new Set(loadJson(FAVORITES_KEY, []));
 let removedIds = new Set(loadJson(REMOVED_KEY, []));
@@ -73,6 +78,7 @@ async function init() {
 
   bindEvents();
   applyView();
+  setPortalZoom(portalBaseZoom, { sticky: true });
   render();
 }
 
@@ -84,6 +90,9 @@ function bindEvents() {
   els.deleteBtn.addEventListener("click", deleteActive);
   els.fullscreenBtn.addEventListener("click", openLightbox);
   els.closeLightbox.addEventListener("click", () => els.lightbox.close());
+  els.zoomSlider.addEventListener("input", () => setPortalZoom(Number(els.zoomSlider.value), { sticky: true }));
+  els.zoomGear.addEventListener("wheel", handleGearWheel, { passive: false });
+  els.zoomGear.addEventListener("pointerdown", startGearDrag);
 
   els.pickFiles.addEventListener("click", () => els.fileInput.click());
   els.pickFolder.addEventListener("click", () => els.folderInput.click());
@@ -208,11 +217,11 @@ function renderPortal(activeIndex) {
       const index = wrap(activeIndex + offset, visibleImages.length);
       const image = visibleImages[index];
       const abs = Math.abs(offset);
-      const x = offset * 118;
-      const rotate = offset * -12;
-      const z = -abs * 90;
-      const y = abs * 12;
-      const scale = 1 - abs * 0.075;
+      const x = offset * 168;
+      const rotate = offset * -10;
+      const z = -abs * 110;
+      const y = abs * 8;
+      const scale = 1 - abs * 0.086;
       return `
         <article
           class="card ${offset === 0 ? "is-active" : ""}"
@@ -245,8 +254,35 @@ function handlePortalWheel(event) {
   schedulePortalZoomReset();
 }
 
-function setPortalZoom(value) {
-  portalZoom = clamp(value, 0.82, 1.72);
+function handleGearWheel(event) {
+  event.preventDefault();
+  const direction = event.deltaY > 0 ? -1 : 1;
+  setPortalZoom(portalBaseZoom + direction * 0.06, { sticky: true });
+}
+
+function startGearDrag(event) {
+  gearDragStartX = event.clientX;
+  gearDragStartZoom = portalBaseZoom;
+  els.zoomGear.setPointerCapture(event.pointerId);
+  els.zoomGear.addEventListener("pointermove", dragGear);
+  els.zoomGear.addEventListener("pointerup", stopGearDrag, { once: true });
+  els.zoomGear.addEventListener("pointercancel", stopGearDrag, { once: true });
+}
+
+function dragGear(event) {
+  const delta = (event.clientX - gearDragStartX) / 150;
+  setPortalZoom(gearDragStartZoom + delta, { sticky: true });
+}
+
+function stopGearDrag() {
+  els.zoomGear.removeEventListener("pointermove", dragGear);
+}
+
+function setPortalZoom(value, options = {}) {
+  portalZoom = clamp(value, 1, 2.2);
+  if (options.sticky) portalBaseZoom = portalZoom;
+  els.zoomSlider.value = portalZoom.toFixed(2);
+  document.documentElement.style.setProperty("--gear-rotation", `${Math.round((portalZoom - 1) * 260)}deg`);
   document.documentElement.style.setProperty("--portal-zoom", portalZoom.toFixed(3));
   els.portalStage.classList.add("is-zooming");
 }
@@ -259,9 +295,11 @@ function schedulePortalZoomReset() {
 function resetPortalZoom() {
   clearTimeout(portalZoomTimer);
   portalZoomTimer = window.setTimeout(() => {
-    portalZoom = 1;
+    portalZoom = portalBaseZoom;
     pinchStartDistance = 0;
-    document.documentElement.style.setProperty("--portal-zoom", "1");
+    els.zoomSlider.value = portalBaseZoom.toFixed(2);
+    document.documentElement.style.setProperty("--portal-zoom", portalBaseZoom.toFixed(3));
+    document.documentElement.style.setProperty("--gear-rotation", `${Math.round((portalBaseZoom - 1) * 260)}deg`);
     els.portalStage.classList.remove("is-zooming");
   }, 80);
 }
@@ -286,7 +324,12 @@ function renderFilm() {
         .join("")}
     </div>
   `;
-  $$(".film-item").forEach((item) => item.addEventListener("click", () => setActive(item.dataset.id)));
+  $$(".film-item").forEach((item) =>
+    item.addEventListener("click", () => {
+      setActive(item.dataset.id, { silent: true });
+      openLightbox();
+    }),
+  );
   $(".film-item.is-active")?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
 }
 
@@ -301,7 +344,26 @@ function renderGrid() {
     `,
     )
     .join("");
-  $$(".tile").forEach((tile) => tile.addEventListener("click", () => setActive(tile.dataset.id)));
+  $$(".tile").forEach((tile, index) => {
+    const direction = index % 2 ? 1 : -1;
+    const depth = (index % 5) + 1;
+    tile.style.setProperty("--burst-x", `${direction * (18 + depth * 9)}px`);
+    tile.style.setProperty("--burst-y", `${(index % 3 === 0 ? -1 : 1) * (14 + depth * 5)}px`);
+    tile.style.setProperty("--burst-r", `${direction * (4 + depth * 1.2)}deg`);
+    tile.addEventListener("click", () => openFromGrid(tile.dataset.id));
+  });
+}
+
+function openFromGrid(id) {
+  setActive(id, { silent: true });
+  const source = els.gridView.querySelector(`[data-id="${CSS.escape(id)}"]`);
+  source?.classList.add("is-burst-source");
+  els.gridView.classList.add("is-bursting");
+  window.setTimeout(() => openLightbox(), 170);
+  window.setTimeout(() => {
+    els.gridView.classList.remove("is-bursting");
+    source?.classList.remove("is-burst-source");
+  }, 760);
 }
 
 function filterAndSort(images) {
@@ -345,9 +407,9 @@ function shuffle() {
   render();
 }
 
-function setActive(id) {
+function setActive(id, options = {}) {
   activeId = id;
-  render();
+  if (!options.silent) render();
 }
 
 function toggleFavorite() {
