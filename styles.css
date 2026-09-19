@@ -854,41 +854,76 @@ option {
 }
 
 @media (max-width: 900px) {
+  html,
   body {
-    overflow: auto;
+    height: 100%;
+    overflow: hidden;
   }
 
   .app-shell {
     grid-template-columns: 1fr;
-    min-height: 100vh;
-    height: auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
 
   .rail {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 12;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-rows: auto auto;
-    gap: 14px;
-    padding: 16px;
+    align-items: center;
+    gap: 9px;
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+    background: rgba(7, 6, 6, 0.82);
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand-mark {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+    font-size: 12px;
   }
 
   .brand h1 {
-    font-size: 28px;
+    font-size: 22px;
+  }
+
+  .brand p {
+    margin-top: 2px;
+    font-size: 10px;
   }
 
   .counter {
+    grid-column: 2;
+    grid-row: 1;
     justify-self: end;
+    align-self: center;
+    gap: 6px;
   }
 
   .counter span:first-child {
-    font-size: 34px;
+    font-size: 30px;
   }
 
-  .view-tabs,
+  .counter span:last-child {
+    font-size: 13px;
+  }
+
+  .view-tabs {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 6px;
+  }
+
   .rail-actions {
     grid-column: 1 / -1;
   }
@@ -896,61 +931,108 @@ option {
   .rail-actions {
     flex-direction: row;
     overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+  }
+
+  .rail-actions::-webkit-scrollbar,
+  .toolbar::-webkit-scrollbar {
+    display: none;
   }
 
   .command-btn {
-    flex: 1 0 116px;
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 38px;
+    padding: 0 12px;
     text-align: center;
+    font-size: 13px;
   }
 
   .workspace {
-    min-height: calc(100vh - 186px);
-    height: auto;
-    overflow: visible;
-    padding: 14px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom));
   }
 
-  .topbar,
-  .details-bar {
-    align-items: stretch;
+  .topbar {
     flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
 
-  .search-box,
-  .title-input {
+  .search-box {
     width: 100%;
+    height: 40px;
+    padding: 0 12px;
+  }
+
+  .search-box span {
+    font-size: 18px;
   }
 
   .select-row,
   .toolbar {
     width: 100%;
     overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .select-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   select {
-    flex: 1 0 150px;
+    min-width: 0;
+    height: 38px;
+    padding: 0 28px 0 10px;
+    font-size: 13px;
   }
 
   .portal-view {
-    min-height: 58vh;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .portal-stage {
+    inset: 0;
+  }
+
+  .portal-ring {
+    width: min(94vmin, 520px);
+    opacity: 0.72;
+  }
+
+  .portal-stage::before,
+  .portal-stage::after {
+    width: min(82vmin, 480px);
   }
 
   .cards {
     width: 100%;
-    height: 58vh;
+    height: 100%;
     max-height: none;
   }
 
   .card {
-    width: min(84vw, 430px);
-    height: min(58vh, 560px);
+    width: min(88vw, 440px);
+    height: min(64vh, 590px);
+    max-height: 100%;
+    border-radius: 10px;
   }
 
   .nav-arrow {
-    width: 46px;
-    height: 64px;
-    margin-top: -32px;
-    font-size: 44px;
+    width: 42px;
+    height: 60px;
+    margin-top: -30px;
+    font-size: 40px;
+    background: rgba(0, 0, 0, 0.42);
   }
 
   .nav-arrow.left {
@@ -961,14 +1043,114 @@ option {
     right: 0;
   }
 
+  .film-view.is-active {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .film-track {
+    height: 100%;
+    gap: 12px;
+    padding: 8px 12px 14px;
+  }
+
+  .film-item {
+    flex-basis: min(84vw, 390px);
+    height: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+  }
+
   .grid-view.is-active {
-    column-width: 170px;
-    height: auto;
-    overflow: visible;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    column-width: calc((100vw - 34px) / 2);
+    column-gap: 10px;
+    padding: 8px 2px 24px;
+  }
+
+  .tile {
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+
+  .details-bar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(5, 5, 5, 0.58);
+  }
+
+  .eyebrow,
+  .image-meta {
+    display: none;
+  }
+
+  .title-input {
+    width: 100%;
+    font-size: 21px;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .zoom-control {
     flex: 1 0 190px;
+  }
+
+  .icon-btn {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .lightbox img {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    margin: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .rail {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .view-tabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .rail-actions {
+    grid-row: 3;
+  }
+
+  .counter {
+    grid-column: 2;
+  }
+
+  .command-btn {
+    min-height: 36px;
+    font-size: 12px;
+  }
+
+  .card {
+    width: min(92vw, 410px);
+    height: min(58vh, 540px);
+  }
+
+  .details-bar {
+    padding: 7px;
+  }
+
+  .title-input {
+    font-size: 18px;
   }
 }
 
