@@ -612,22 +612,26 @@ option {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 26px 4px 128px;
+  padding: 18px 4px 128px;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
 .grid-view.is-active {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  align-content: start;
-  gap: 18px;
+  display: block;
+  column-width: 270px;
+  column-gap: 18px;
 }
 
 .tile {
   position: relative;
-  aspect-ratio: 4 / 5;
+  display: inline-block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 18px;
+  break-inside: avoid;
+  aspect-ratio: var(--tile-ratio, 4 / 5);
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -658,6 +662,10 @@ option {
   box-shadow:
     0 20px 54px rgba(0, 0, 0, 0.42),
     0 0 26px rgba(85, 214, 194, 0.16);
+}
+
+.tile .badge {
+  display: none;
 }
 
 .grid-view.is-bursting .tile:not(.is-burst-source) {
@@ -812,6 +820,7 @@ option {
   padding: 0;
   border: 0;
   background: rgba(0, 0, 0, 0.92);
+  cursor: zoom-out;
 }
 
 .lightbox::backdrop {
@@ -825,6 +834,7 @@ option {
   padding: 10px;
   margin: 2vh auto;
   display: block;
+  cursor: zoom-out;
 }
 
 .lightbox .close {
@@ -952,7 +962,7 @@ option {
   }
 
   .grid-view.is-active {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    column-width: 170px;
     height: auto;
     overflow: visible;
   }

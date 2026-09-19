@@ -90,6 +90,8 @@ function bindEvents() {
   els.deleteBtn.addEventListener("click", deleteActive);
   els.fullscreenBtn.addEventListener("click", openLightbox);
   els.closeLightbox.addEventListener("click", () => els.lightbox.close());
+  els.lightbox.addEventListener("click", () => els.lightbox.close());
+  els.lightboxImage.addEventListener("click", () => els.lightbox.close());
   els.zoomSlider.addEventListener("input", () => setPortalZoom(Number(els.zoomSlider.value), { sticky: true }));
   els.zoomGear.addEventListener("wheel", handleGearWheel, { passive: false });
   els.zoomGear.addEventListener("pointerdown", startGearDrag);
@@ -336,8 +338,8 @@ function renderFilm() {
 function renderGrid() {
   els.gridView.innerHTML = visibleImages
     .map(
-      (image) => `
-      <article class="tile ${image.id === activeId ? "is-active" : ""}" data-id="${image.id}">
+      (image, index) => `
+      <article class="tile ${image.id === activeId ? "is-active" : ""}" data-id="${image.id}" style="--tile-ratio: ${getTileRatio(image, index)}">
         <img src="${image.src}" alt="${escapeHtml(getTitle(image))}" loading="lazy" />
         <span class="badge">${escapeHtml(getTitle(image))}</span>
       </article>
@@ -563,6 +565,12 @@ function openLightbox() {
   els.lightboxImage.src = active.src;
   els.lightboxImage.alt = getTitle(active);
   if (!els.lightbox.open) els.lightbox.showModal();
+}
+
+function getTileRatio(image, index) {
+  if (image.width && image.height) return `${image.width} / ${image.height}`;
+  const ratios = ["4 / 5", "1 / 1", "5 / 4", "3 / 4", "4 / 3"];
+  return ratios[index % ratios.length];
 }
 
 function showDrop() {
