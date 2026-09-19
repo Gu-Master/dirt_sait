@@ -47,8 +47,10 @@ let objectUrls = new Map();
 let activeId = null;
 let view = "portal";
 let saveTitleTimer = 0;
-let portalWheelLock = 0;
-let touchStartX = 0;
+let portalZoom = 1;
+let portalZoomTimer = 0;
+let pinchStartDistance = 0;
+let pinchStartZoom = 1;
 let meta = loadJson(META_KEY, {});
 let favorites = new Set(loadJson(FAVORITES_KEY, []));
 let removedIds = new Set(loadJson(REMOVED_KEY, []));
@@ -91,12 +93,19 @@ function bindEvents() {
   els.cleanDuplicates.addEventListener("click", cleanDuplicates);
   els.portalStage.addEventListener("wheel", handlePortalWheel, { passive: false });
   els.portalStage.addEventListener("touchstart", (event) => {
-    touchStartX = event.touches[0]?.clientX || 0;
+    if (event.touches.length === 2) {
+      pinchStartDistance = getTouchDistance(event.touches);
+      pinchStartZoom = portalZoom;
+    }
+  });
+  els.portalStage.addEventListener("touchmove", (event) => {
+    if (event.touches.length !== 2 || !pinchStartDistance) return;
+    event.preventDefault();
+    const nextZoom = pinchStartZoom * (getTouchDistance(event.touches) / pinchStartDistance);
+    setPortalZoom(nextZoom);
   });
   els.portalStage.addEventListener("touchend", (event) => {
-    const touchEndX = event.changedTouches[0]?.clientX || 0;
-    const delta = touchEndX - touchStartX;
-    if (Math.abs(delta) > 48) step(delta > 0 ? -1 : 1);
+    if (event.touches.length < 2) resetPortalZoom();
   });
 
   els.searchInput.addEventListener("input", render);
@@ -229,10 +238,37 @@ function renderPortal(activeIndex) {
 function handlePortalWheel(event) {
   if (view !== "portal") return;
   event.preventDefault();
-  const now = Date.now();
-  if (now < portalWheelLock) return;
-  portalWheelLock = now + 260;
-  step(event.deltaY > 0 || event.deltaX > 0 ? 1 : -1);
+  const wheelPower = event.ctrlKey ? 0.0045 : 0.0018;
+  const rawDelta = event.deltaY || event.deltaX;
+  const delta = event.ctrlKey ? -rawDelta * wheelPower : Math.abs(rawDelta) * wheelPower;
+  setPortalZoom(portalZoom + delta);
+  schedulePortalZoomReset();
+}
+
+function setPortalZoom(value) {
+  portalZoom = clamp(value, 0.82, 1.72);
+  document.documentElement.style.setProperty("--portal-zoom", portalZoom.toFixed(3));
+  els.portalStage.classList.add("is-zooming");
+}
+
+function schedulePortalZoomReset() {
+  clearTimeout(portalZoomTimer);
+  portalZoomTimer = window.setTimeout(resetPortalZoom, 620);
+}
+
+function resetPortalZoom() {
+  clearTimeout(portalZoomTimer);
+  portalZoomTimer = window.setTimeout(() => {
+    portalZoom = 1;
+    pinchStartDistance = 0;
+    document.documentElement.style.setProperty("--portal-zoom", "1");
+    els.portalStage.classList.remove("is-zooming");
+  }, 80);
+}
+
+function getTouchDistance(touches) {
+  const [a, b] = touches;
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 }
 
 function renderFilm() {
@@ -595,6 +631,10 @@ function pad(number) {
 
 function wrap(index, length) {
   return ((index % length) + length) % length;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
 function formatBytes(bytes) {
