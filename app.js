@@ -62,6 +62,10 @@ let removedIds = new Set(loadJson(REMOVED_KEY, []));
 
 init();
 
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
 async function init() {
   db = await openDb();
   const seedImages = (window.SEED_IMAGES || []).map((item, index) => ({
@@ -166,6 +170,7 @@ function bindEvents() {
 }
 
 function applyView() {
+  if (isMobileLayout()) view = "portal";
   $$(".view-tabs button").forEach((button) => button.classList.toggle("is-active", button.dataset.view === view));
   $$(".view").forEach((node) => node.classList.remove("is-active"));
   $(`#${view}View`).classList.add("is-active");
