@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Братья мультивселенных</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="ambient" aria-hidden="true">
+        <img id="ambientImage" alt="" />
+        <div class="grain"></div>
+      </div>
+
+      <aside class="rail">
+        <div class="brand">
+          <span class="brand-mark">M3</span>
+          <div>
+            <h1>Братья</h1>
+            <p>мультивселенных</p>
+          </div>
+        </div>
+
+        <div class="counter">
+          <span id="currentIndex">01</span>
+          <span id="totalCount">00</span>
+        </div>
+
+        <nav class="view-tabs" aria-label="Вид галереи">
+          <button class="icon-btn is-active" data-view="portal" title="Портал" aria-label="Портал">◎</button>
+          <button class="icon-btn" data-view="film" title="Лента" aria-label="Лента">▤</button>
+          <button class="icon-btn" data-view="grid" title="Мозаика" aria-label="Мозаика">▦</button>
+        </nav>
+
+        <div class="rail-actions">
+          <button class="command-btn" id="pickFiles">＋ Файлы</button>
+          <button class="command-btn" id="pickFolder">▣ Папка</button>
+          <button class="command-btn" id="pasteImage">⌘ Буфер</button>
+          <button class="command-btn accent" id="cleanDuplicates">≋ Дубли</button>
+        </div>
+
+        <input id="fileInput" type="file" accept="image/*" multiple hidden />
+        <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="search-box">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="поиск по мирам" autocomplete="off" />
+          </div>
+
+          <div class="select-row">
+            <select id="filterSelect" aria-label="Фильтр">
+              <option value="all">Все миры</option>
+              <option value="favorites">Избранное</option>
+              <option value="seed">Стартовые</option>
+              <option value="custom">Добавленные</option>
+            </select>
+            <select id="sortSelect" aria-label="Сортировка">
+              <option value="new">Сначала новые</option>
+              <option value="old">Сначала старые</option>
+              <option value="name">По имени</option>
+            </select>
+          </div>
+        </header>
+
+        <section class="portal-view view is-active" id="portalView" aria-label="Главный просмотр">
+          <button class="nav-arrow left" id="prevBtn" aria-label="Предыдущее">‹</button>
+
+          <div class="portal-stage" id="portalStage">
+            <div class="portal-ring" aria-hidden="true"></div>
+            <div class="cards" id="cards"></div>
+          </div>
+
+          <button class="nav-arrow right" id="nextBtn" aria-label="Следующее">›</button>
+        </section>
+
+        <section class="film-view view" id="filmView" aria-label="Лента"></section>
+        <section class="grid-view view" id="gridView" aria-label="Мозаика"></section>
+
+        <footer class="details-bar">
+          <div class="details-main">
+            <p class="eyebrow" id="imageWorld">Universe 001</p>
+            <input id="titleInput" class="title-input" aria-label="Название" />
+            <p id="imageMeta" class="image-meta"></p>
+          </div>
+
+          <div class="toolbar" aria-label="Действия">
+            <button class="icon-btn" id="favoriteBtn" title="В избранное" aria-label="В избранное">♡</button>
+            <button class="icon-btn" id="shuffleBtn" title="Случайно" aria-label="Случайно">↯</button>
+            <button class="icon-btn" id="fullscreenBtn" title="На весь экран" aria-label="На весь экран">⛶</button>
+            <a class="icon-btn" id="downloadBtn" title="Скачать" aria-label="Скачать" download>⇩</a>
+            <button class="icon-btn danger" id="deleteBtn" title="Удалить" aria-label="Удалить">×</button>
+          </div>
+        </footer>
+      </main>
+
+      <div class="drop-layer" id="dropLayer">
+        <div class="drop-target">
+          <span>＋</span>
+          <strong>Добавить в коллекцию</strong>
+        </div>
+      </div>
+    </div>
+
+    <dialog class="lightbox" id="lightbox">
+      <button class="icon-btn close" id="closeLightbox" aria-label="Закрыть">×</button>
+      <img id="lightboxImage" alt="" />
+    </dialog>
+
+    <script src="seed-manifest.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
